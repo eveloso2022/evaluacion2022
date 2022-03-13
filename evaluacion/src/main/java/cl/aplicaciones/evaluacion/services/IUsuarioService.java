@@ -1,8 +1,9 @@
 package cl.aplicaciones.evaluacion.services;
 
 import cl.aplicaciones.evaluacion.dto.UsuarioDto;
+import org.springframework.http.ResponseEntity;
 
 public interface IUsuarioService {
 
-    public UsuarioDto inyectarUsuario(UsuarioDto usuarioDto);
+    ResponseEntity inyectarUsuario(UsuarioDto usuarioDto);
 }

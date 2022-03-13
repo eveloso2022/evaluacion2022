@@ -7,6 +7,7 @@ import org.hibernate.annotations.FetchMode;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
 
@@ -15,30 +16,46 @@ import java.util.UUID;
 public  class Usuario {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO, generator= "usuario_generator")
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "usuario_generator")
     @Getter
-    @Setter
     private UUID id;
 
     @NotNull
-    @Getter
     @Setter
     private String password;
 
     @NotNull
-    @Getter
     @Setter
     @Column(unique = true)
     private String email;
 
     @NotBlank
-    @Getter
     @Setter
     private String username;
 
+    @Getter
+    @Setter
+    private Date created;
+
+    @Getter
+    @Setter
+    private Date modified;
+
+    @Getter
+    @Setter
+    private Date last_login;
+
+    @Getter
+    @Setter
+    private String token;
+
+    @Getter
+    @Setter
+    private String isactive;
+
+    @SuppressWarnings("unused")
     @OneToMany
     @Fetch(value = FetchMode.SELECT)
-    @Getter
     @JoinColumn(name = "usuario_id") // we need to duplicate the physical information
     private Set<Telefono> telefono;
 }

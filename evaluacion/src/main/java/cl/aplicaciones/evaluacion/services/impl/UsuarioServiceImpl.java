@@ -6,11 +6,18 @@ import cl.aplicaciones.evaluacion.entity.Usuario;
 import cl.aplicaciones.evaluacion.repository.TelefonoRepository;
 import cl.aplicaciones.evaluacion.repository.UsuarioRepository;
 import cl.aplicaciones.evaluacion.services.IUsuarioService;
+import cl.aplicaciones.evaluacion.util.TokenUtil;
+import cl.aplicaciones.evaluacion.util.UsuarioResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -18,50 +25,62 @@ import java.util.stream.Collectors;
 public class UsuarioServiceImpl implements IUsuarioService {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    UsuarioRepository usuarioRepository;
 
     @Autowired
-    private TelefonoRepository telefonoRepository;
+    TelefonoRepository telefonoRepository;
 
-    public UsuarioDto inyectarUsuario(UsuarioDto usuarioDto) {
+    public UsuarioServiceImpl() {
+    }
+
+    public ResponseEntity inyectarUsuario(UsuarioDto user) {
+        log.debug("usuarioPorEmail[" + (user == null ? "null" : user) + "] Inicio");
         Usuario usuario = new Usuario();
-        usuario.setUsername(usuarioDto.getName());
-        usuario.setEmail(usuarioDto.getEmail());
-        usuario.setPassword(usuarioDto.getPassword());
-        log.debug("Antes de buscar por email");
-        Usuario usuarioPorEmail = usuarioRepository.findUsuarioByEmail(usuarioDto.getEmail());
-
-        log.debug("ya buscamos por email");
+        log.debug("Buscando email[" + user.getEmail() + "]");
+        Usuario usuarioPorEmail = usuarioRepository.findUsuarioByEmail(user.getEmail());
+        log.debug("usuarioPorEmail[" + (usuarioPorEmail == null ? "null" : usuarioPorEmail) + "]");
         if ( usuarioPorEmail == null ) {
-            log.debug("guardando usuario");
+
+            TokenUtil tokenUtil = new TokenUtil();
+            usuario.setUsername(user.getName());
+            usuario.setEmail(user.getEmail());
+            usuario.setPassword(user.getPassword());
+            usuario.setCreated(Calendar.getInstance().getTime());
+            usuario.setModified(Calendar.getInstance().getTime());
+            usuario.setLast_login(Calendar.getInstance().getTime());
+            usuario.setIsactive("true");
+            usuario.setToken(tokenUtil.generateToken(user.getPassword(), user.getEmail()));
+
             Usuario usuarioEntityBD = usuarioRepository.save(usuario);
-            log.debug("guardando telefonos");
-            Arrays.stream(usuarioDto.getPhones())
-                    .map(a -> new Telefono(
-                            a.getNumber(),
-                            a.getCityCode(),
-                            a.getCountryCode(),
-                            usuarioEntityBD))
-                    .collect(Collectors.toList())
-                    .forEach(t -> telefonoRepository.save(t));
-            log.debug("buscando registros");
-        }
-        else {
-            log.debug("Antes del if");
-            if (usuarioDto.getPhones() != null && usuarioDto.getPhones().length > 0){
-                log.debug("Antes de borrar por id");
-                telefonoRepository.deleteAll(usuarioPorEmail.getTelefono());
-                Arrays.stream(usuarioDto.getPhones())
+
+            if (user.getPhones() != null && user.getPhones().length > 0){
+                Arrays.stream(user.getPhones())
                         .map(a -> new Telefono(
                                 a.getNumber(),
                                 a.getCityCode(),
                                 a.getCountryCode(),
-                                usuarioPorEmail))
+                                usuarioEntityBD))
                         .collect(Collectors.toList())
                         .forEach(t -> telefonoRepository.save(t));
+
             }
+
+            UsuarioResponse usuarioResponse = new UsuarioResponse();
+            usuarioResponse.setId(usuarioEntityBD.getId());
+            usuarioResponse.setCreated(usuarioEntityBD.getCreated());
+            usuarioResponse.setModified(usuarioEntityBD.getModified());
+            usuarioResponse.setLast_login(usuarioEntityBD.getLast_login());
+            usuarioResponse.setIsactive(usuarioEntityBD.getIsactive());
+            usuarioResponse.setToken(usuarioEntityBD.getToken());
+
+            return new ResponseEntity(usuarioResponse, HttpStatus.CREATED);
         }
-        log.info("Creado en Base de datos:" + usuarioPorEmail);
-        return usuarioDto;
+        else {
+            log.debug("Correo existe en Base de datos");
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("mensaje", "El correo ya registrado");
+            return new ResponseEntity(body, HttpStatus.BAD_REQUEST);
+
+        }
     }
 }

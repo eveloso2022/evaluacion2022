@@ -13,26 +13,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class Telefono implements Serializable {
 
-    @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO,generator= "telefono_generator")
     private UUID id;
 
-    @Setter
-    @Getter
     private String number;
-
-    @Setter
-    @Getter
+    
     private Integer cityCode;
 
-    @Setter
-    @Getter
     private Integer countryCode;
 
-    @Setter
-    @Getter
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;

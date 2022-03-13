@@ -3,23 +3,19 @@ package cl.aplicaciones.evaluacion.dto;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 
 @RequiredArgsConstructor
 @Data
 public class UsuarioDto {
 
-    @NotNull(message = "Debe informar name - null")
-    @NotEmpty(message = "Debe informar name - vacio")
+    @NotBlank(message = "Ingrese un name (vacío)")
     private String name;
 
-    @NotNull(message = "Debe informar email - null")
-    @NotEmpty(message = "Debe informar email - vacio")
+    @Pattern(message = "Ingrese un email (valido)" , regexp = "\\w[a-zA-Z]*@\\w[a-zA-Z]*.cl")
     private String email;
 
-    @NotNull(message = "Debe informar password - null")
-    @NotEmpty(message = "Debe informar password - vacio")
+    @NotBlank(message = "Ingrese un password (vacío)")
     private String password;
 
     private TelefonoDto[] phones;
